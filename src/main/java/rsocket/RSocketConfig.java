@@ -6,25 +6,23 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
 import lombok.extern.slf4j.Slf4j;
+import java.time.Instant;
 
 @Configuration
 @Slf4j
-public class RSocketClientConfiguration2 {
+public class RSocketConfig {
 
     @Bean
     public ApplicationRunner sender(RSocketRequester.Builder requesterBuilder) {
         return args -> {
-            String stockSymbol = "XYZ";
             RSocketRequester tcp = requesterBuilder.tcp("localhost", 7000);
             tcp
-                .route("stock/{symbol}", stockSymbol)
-                .retrieveFlux(StockQuote.class)
-                .doOnNext(stockQuote -> log.info(
-                    "Price of " + stockQuote.getSymbol() +
-                    " : " + stockQuote.getPrice() +
-                    " (at " + stockQuote.getTimestamp() + ")")
-                )
+                .route("alert")
+                .data(new Alert(Alert.Level.RED, "TOM", Instant.now()))
+                .send()
                 .subscribe();
+
+            log.info("Alert sent");
         };
     }
 }
